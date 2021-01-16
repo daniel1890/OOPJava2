@@ -1,0 +1,1 @@
+The goal is to make a full fledged ticketmachine with a working GUI. The GUI has several buttons to choose one of the available movies that are showing that evening. When the user has put in enough money the ticket gets printed.
