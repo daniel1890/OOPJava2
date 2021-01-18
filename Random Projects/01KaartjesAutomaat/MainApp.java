@@ -1,23 +1,31 @@
+import processing.core.PApplet;
 
-public class MainApp {
+public class MainApp extends PApplet {
 
-	public static void main(String[] args) {
-		Film[] f = new Film[2];
-		f[0] = new Film("Forest Gump", 10.00);
-		f[1] = new Film("Parasite", 5.00);
-		
-		Kaartjesautomaat k = new Kaartjesautomaat(f);
-		k.kiesFilm(0);
-		k.werpGeldIn(5);
-		k.werpGeldIn(2);
-		k.werpGeldIn(3);
-		k.kiesFilm(1);
-		k.werpGeldIn(10);
-		k.kiesFilm(0);
-		k.werpGeldIn(2);
-		k.kiesFilm(1);
-		k.werpGeldIn(5);
-		System.out.println(k.getDagtotaal());
-	}
+    public static void main(String[] args) {
+        PApplet.main(new String[] {"MainApp"} );
+    }
+
+    public void settings() {
+        this.size(600, 600);
+    }
+
+    KaartjesAutomaat k = new KaartjesAutomaat(this);
+
+    public void setup() {
+
+        k.voegFilmsToe("Finding Nemo", 10.00);
+        k.voegFilmsToe("Parasite", 10.00);
+        k.voegFilmsToe("Forest Gump", 15.00);
+        k.voegFilmsToe("Avengers", 50.00);
+    }
+
+    public void draw() {
+        k.tekenSchermenAutomaat();
+    }
+
+    public void mouseReleased() {
+        k.setMouseLock(false);
+    }
 
 }
