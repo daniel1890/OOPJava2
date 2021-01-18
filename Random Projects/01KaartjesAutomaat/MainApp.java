@@ -13,11 +13,11 @@ public class MainApp extends PApplet {
     KaartjesAutomaat k = new KaartjesAutomaat(this);
 
     public void setup() {
-
         k.voegFilmsToe("Finding Nemo", 10.00);
         k.voegFilmsToe("Parasite", 10.00);
         k.voegFilmsToe("Forest Gump", 15.00);
         k.voegFilmsToe("Avengers", 50.00);
+        k.initialiseerAlleKnoppen();
     }
 
     public void draw() {
