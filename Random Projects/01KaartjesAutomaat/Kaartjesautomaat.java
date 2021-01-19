@@ -5,24 +5,24 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class KaartjesAutomaat {
-    private double[] geldBedragen;
     PApplet app;
     public ArrayList<Film> films;
     public ArrayList<Knop> knoppenFilms;
     public ArrayList<Knop> knoppenGeld;
     private ArrayList<Knop> scrollKnoppenFilms;
+    public ArrayList<Kaartje> kaartjes;
+    private double[] geldBedragen;
     private Knop terugKnop;
     private Knop kaartjeKnop;
-    public ArrayList<Kaartje> kaartjes;
-    DecimalFormat format;
+    private DecimalFormat format;
     public double dagtotaal;
     private double inworp;
+    private double wisselgeld;
     public int indexHuidigeFilm;
     public boolean mouseLock;
     private boolean tekenDrukKnopKaartje;
     private boolean printKaartje;
     public boolean isFilmGekozen;
-    private double wisselgeld;
     public float scrollLock;
 
     public KaartjesAutomaat(PApplet app) {
@@ -45,10 +45,10 @@ public class KaartjesAutomaat {
         this.printKaartje = false;
     }
 
-    // Onderstaande methodes voeren alle nodige methodes die nodig zijn in het programma uit.
+    // Onderstaande methodes voeren alle nodige sequenties van het programma uit en wisselt van scherm waar nodig.
     public void tekenSchermenAutomaat() {
         if (!isFilmGekozen && !printKaartje) {
-            kiesFilmScherm();
+            tekenKiesFilmScherm();
         }
         if (isFilmGekozen && !printKaartje) {
             tekenSchermBetaalFilm();
@@ -69,7 +69,7 @@ public class KaartjesAutomaat {
         drukPrintKaartjeKnop();
     }
 
-    public void kiesFilmScherm() {
+    public void tekenKiesFilmScherm() {
         resetBackground();
         tekenKnoppenFilmsPerFilm();
         tekenScrollKnoppenFilms();
@@ -91,12 +91,12 @@ public class KaartjesAutomaat {
         voegScrollKnoppenFilmsToe();
     }
 
-    // Onderstaande methodes hebben alles te maken met het tekenen van tekst op het scherm.
+    // Onderstaande methodes hebben alles te maken met het tekenen van tekst/elementen op het scherm.
     public String tekstMet0(double bedrag) {
         if (bedrag >= 1.00) {
-            return "Nog te betalen bedrag: €" + (format.format(bedrag));
+            return format.format(bedrag);
         } else if (bedrag < 1) {
-            return "Nog te betalen bedrag: €0" + (format.format(bedrag));
+            return "0" + (format.format(bedrag));
         }
         return "";
     }
@@ -104,7 +104,7 @@ public class KaartjesAutomaat {
     public void tekenNogTeBetalenGeld() {
         if (!tekenDrukKnopKaartje) {
             double bedrag = films.get(indexHuidigeFilm).getPrijs() - inworp;
-            String tekst = tekstMet0(bedrag);
+            String tekst = "Nog te betalen bedrag: €" + tekstMet0(bedrag);
             app.fill(255);
             app.textSize(32);
             app.text(tekst, app.width / 2, app.height / 2);
@@ -158,8 +158,8 @@ public class KaartjesAutomaat {
         for (int i = 0; i < nKnoppen; i++) {
             float knoppenBreedteTotaal = app.width - 200;
             float knopBreedte = knoppenBreedteTotaal / nKnoppen;
-            String tekst = Double.toString(geldBedragen[i]);
-            Knop kg = new Knop(app, ((app.width / 2) - knoppenBreedteTotaal / 2) + (i * (knopBreedte)), app.height / 4, knopBreedte, 50, tekst, i, 10);
+            String formatBedrag = tekstMet0(geldBedragen[i]);
+            Knop kg = new Knop(app, ((app.width / 2) - knoppenBreedteTotaal / 2) + (i * (knopBreedte)), app.height / 4, knopBreedte, 50, formatBedrag, i, 10);
             knoppenGeld.add(kg);
         }
     }
@@ -201,30 +201,6 @@ public class KaartjesAutomaat {
         for (int i = 0; i < 2; i++) {
             Knop k = new Knop(app, knopX, knopY + (i * knopHoogte * 2), knopBreedte, knopHoogte, scrollString[i], i, 16);
             scrollKnoppenFilms.add(k);
-        }
-    }
-
-    public void drukScrollKnoppenFilms() {
-        float scrollSize = 10;
-        float scrollMax = 10;
-        if (knoppenFilms.size() > 5) {
-            Knop filmknop = knoppenFilms.get(0);
-            scrollMax = 10 + ((knoppenFilms.size() - 5) + filmknop.getHoogte() * (knoppenFilms.size() - 5));
-        }
-        for (Knop k : scrollKnoppenFilms) {
-            if (k.isMuisOverKnop() && app.mousePressed && !mouseLock && k.getKnopNummer() == 0 && scrollLock > -10) {
-                for (Knop filmKnoppen : knoppenFilms) {
-                    this.mouseLock = true;
-                    filmKnoppen.scroll(-scrollSize);
-                    this.scrollLock -= scrollSize / knoppenFilms.size();
-                }
-            } else if (k.isMuisOverKnop() && app.mousePressed && !mouseLock && k.getKnopNummer() == 1 && scrollLock < scrollMax) {
-                for (Knop filmKnoppen : knoppenFilms) {
-                    this.mouseLock = true;
-                    filmKnoppen.scroll(scrollSize);
-                    this.scrollLock += scrollSize / knoppenFilms.size();
-                }
-            }
         }
     }
 
@@ -274,7 +250,6 @@ public class KaartjesAutomaat {
         Knop k = terugKnop;
         if (app.mousePressed && k.isMuisOverKnop() && !mouseLock && !printKaartje) {
             annuleerBetaling();
-            resetScrollLock();
             tekenDrukKnopKaartje = false;
             isFilmGekozen = false;
         } else if (app.mousePressed && k.isMuisOverKnop() && !mouseLock && printKaartje) {
@@ -289,7 +264,7 @@ public class KaartjesAutomaat {
 
     public void drukGeldKnop() {
         for (Knop k : knoppenGeld) {
-            if (app.mousePressed && k.isMuisOverKnop() && !mouseLock) {
+            if (app.mousePressed && k.isMuisOverKnop() && !mouseLock && !tekenDrukKnopKaartje) {
                 werpGeldIn(geldBedragen[k.getKnopNummer()]);
                 setMouseLock(true);
             }
@@ -305,6 +280,31 @@ public class KaartjesAutomaat {
         }
     }
 
+    public void drukScrollKnoppenFilms() {
+        float scrollSize = 10;
+        float scrollMax = 10;
+        if (knoppenFilms.size() > 5) {
+            Knop filmknop = knoppenFilms.get(0);
+            scrollMax = 10 + ((knoppenFilms.size() - 5) + filmknop.getHoogte() * (knoppenFilms.size() - 5));
+        }
+        for (Knop k : scrollKnoppenFilms) {
+            if (k.isMuisOverKnop() && app.mousePressed && !mouseLock && k.getKnopNummer() == 0 && scrollLock > 0) {
+                for (Knop filmKnoppen : knoppenFilms) {
+                    this.mouseLock = true;
+                    filmKnoppen.scroll(-scrollSize);
+                    this.scrollLock -= scrollSize / knoppenFilms.size();
+                }
+            } else if (k.isMuisOverKnop() && app.mousePressed && !mouseLock && k.getKnopNummer() == 1 && scrollLock < scrollMax) {
+                for (Knop filmKnoppen : knoppenFilms) {
+                    this.mouseLock = true;
+                    filmKnoppen.scroll(scrollSize);
+                    this.scrollLock += scrollSize / knoppenFilms.size();
+                }
+            }
+        }
+    }
+
+    // Onderstaande methodes setten/resetten de staat van bepaalde variabelen.
     public void resetFilmKnoppenPositie() {
         int i = 0;
         for (Knop k : knoppenFilms) {
@@ -348,7 +348,6 @@ public class KaartjesAutomaat {
         accepteerBetaling(f);
     }
 
-
     public void verhoogDagTotaal() {
         Film f = films.get(indexHuidigeFilm);
         this.dagtotaal += f.getPrijs();
@@ -376,3 +375,10 @@ public class KaartjesAutomaat {
     }
 
 }
+
+/* to-do lijst:
+- Voeg links van het scherm een knop toe die de gebruiker naar het beheer scherm brengt via een wachtwoord die je input via de console.
+- Voeg/verwijder films toe via beheer scherm.
+- Bekijk of reset het dagtotaal.
+- Bestel meerdere kaartjes in 1 bestelling.
+ */
