@@ -10,9 +10,11 @@ public class KaartjesAutomaat {
     public ArrayList<Film> films;
     public ArrayList<Knop> knoppenFilms;
     public ArrayList<Knop> knoppenGeld;
+    private ArrayList<Knop> scrollKnoppenFilms;
     private Knop terugKnop;
     private Knop kaartjeKnop;
     public ArrayList<Kaartje> kaartjes;
+    DecimalFormat format;
     public double dagtotaal;
     private double inworp;
     public int indexHuidigeFilm;
@@ -21,6 +23,7 @@ public class KaartjesAutomaat {
     private boolean printKaartje;
     public boolean isFilmGekozen;
     private double wisselgeld;
+    public float scrollLock;
 
     public KaartjesAutomaat(PApplet app) {
         this.app = app;
@@ -28,11 +31,14 @@ public class KaartjesAutomaat {
         this.knoppenFilms = new ArrayList<>();
         this.knoppenGeld = new ArrayList<>();
         this.kaartjes = new ArrayList<>();
+        this.scrollKnoppenFilms = new ArrayList<>();
+        this.format = new DecimalFormat("##.00");
         double[] geldBedragen = {0.05, 0.10, 0.20, 0.50, 1.00, 2.00, 5.00};
         this.geldBedragen = geldBedragen;
         this.dagtotaal = 0.00;
         this.inworp = 0;
         this.wisselgeld = 0;
+        this.scrollLock = 0;
         this.mouseLock = false;
         this.isFilmGekozen = false;
         this.tekenDrukKnopKaartje = false;
@@ -41,13 +47,9 @@ public class KaartjesAutomaat {
 
     // Onderstaande methodes voeren alle nodige methodes die nodig zijn in het programma uit.
     public void tekenSchermenAutomaat() {
-        // creeër alle nodige knoppen
-
-
         if (!isFilmGekozen && !printKaartje) {
             kiesFilmScherm();
         }
-
         if (isFilmGekozen && !printKaartje) {
             tekenSchermBetaalFilm();
         } else if (printKaartje){
@@ -70,7 +72,9 @@ public class KaartjesAutomaat {
     public void kiesFilmScherm() {
         resetBackground();
         tekenKnoppenFilmsPerFilm();
+        tekenScrollKnoppenFilms();
         drukFilmKnop();
+        drukScrollKnoppenFilms();
     }
 
     public void tekenKaartjeScherm() {
@@ -84,27 +88,26 @@ public class KaartjesAutomaat {
         voegBetaalKnoppenToe();
         voegTekenKaartjeKnopToe();
         voegTekenTerugKnopToe();
+        voegScrollKnoppenFilmsToe();
     }
 
     // Onderstaande methodes hebben alles te maken met het tekenen van tekst op het scherm.
-    public String tekstMet0(double bedrag, DecimalFormat format) {
+    public String tekstMet0(double bedrag) {
         if (bedrag >= 1.00) {
             return "Nog te betalen bedrag: €" + (format.format(bedrag));
         } else if (bedrag < 1) {
             return "Nog te betalen bedrag: €0" + (format.format(bedrag));
         }
-
         return "";
     }
 
     public void tekenNogTeBetalenGeld() {
         if (!tekenDrukKnopKaartje) {
             double bedrag = films.get(indexHuidigeFilm).getPrijs() - inworp;
-            DecimalFormat f = new DecimalFormat("##.00");
-            String testTekst = tekstMet0(bedrag, f);
+            String tekst = tekstMet0(bedrag);
             app.fill(255);
             app.textSize(32);
-            app.text(testTekst, app.width / 2, app.height / 2);
+            app.text(tekst, app.width / 2, app.height / 2);
         }
     }
 
@@ -126,7 +129,7 @@ public class KaartjesAutomaat {
         app.textAlign(app.CENTER);
         app.textSize(22);
         app.rect(kaartjeX1, kaartjeY1, kaartjeBreedte, kaartjeHoogte);
-        //kaartjeArt(300, 200, 400);
+        kaartjeArt(300, 200, 400);
         app.strokeWeight(2);
         app.stroke(0, 100);
         app.line(kaartjeX1 + lijnBuffer, kaartjeY1 + lijnBuffer, app.width - lijnBuffer, kaartjeY1 + lijnBuffer);
@@ -166,7 +169,7 @@ public class KaartjesAutomaat {
         float knopHoogte = app.height / 9;
         float knopX = (app.width / 2) - (knopBreedte / 2);
         float knopY = (app.height / 2) - (knopHoogte / 2);
-        this.kaartjeKnop = new Knop(app, knopX, knopY, knopBreedte, knopHoogte, "Print kaartje.", 0, 32);
+        this.kaartjeKnop = new Knop(app, knopX, knopY, knopBreedte, knopHoogte, "Print kaartje.", 0, 26);
     }
 
     public void voegTekenTerugKnopToe() {
@@ -179,20 +182,62 @@ public class KaartjesAutomaat {
         Film f = new Film(naam, prijs);
         films.add(f);
         float knopHoogte = 100;
-        Knop p = new Knop(app, app.width / 4, 50 + (knoppenFilms.size() * 120), app.width / 2, knopHoogte, f.getNaam(), knoppenFilms.size(), 32);
+        Knop p = new Knop(app, app.width / 4, 10 + (knoppenFilms.size() * 120), app.width / 2, knopHoogte, f.getNaam(), knoppenFilms.size(), 32);
         knoppenFilms.add(p);
     }
 
     public void voegNieuwKaartjeToe() {
         Film f = films.get(indexHuidigeFilm);
-        Kaartje k = new Kaartje(f.getNaam(), f.getPrijs(), this.wisselgeld);
+        Kaartje k = new Kaartje(f.getNaam(), f.getPrijs(), this.wisselgeld, this.format);
         kaartjes.add(k);
+    }
+
+    public void voegScrollKnoppenFilmsToe() {
+        float knopHoogte = app.height / 9;
+        float knopBreedte = app.width / 9;
+        float knopX = app.width / 2 + (app.width / 4) + (app.width / 15);
+        float knopY = app.height / 2 - knopHoogte;
+        String[] scrollString = {"▲", "▼"};
+        for (int i = 0; i < 2; i++) {
+            Knop k = new Knop(app, knopX, knopY + (i * knopHoogte * 2), knopBreedte, knopHoogte, scrollString[i], i, 16);
+            scrollKnoppenFilms.add(k);
+        }
+    }
+
+    public void drukScrollKnoppenFilms() {
+        float scrollSize = 10;
+        float scrollMax = 10;
+        if (knoppenFilms.size() > 5) {
+            Knop filmknop = knoppenFilms.get(0);
+            scrollMax = 10 + ((knoppenFilms.size() - 5) + filmknop.getHoogte() * (knoppenFilms.size() - 5));
+        }
+        for (Knop k : scrollKnoppenFilms) {
+            if (k.isMuisOverKnop() && app.mousePressed && !mouseLock && k.getKnopNummer() == 0 && scrollLock > -10) {
+                for (Knop filmKnoppen : knoppenFilms) {
+                    this.mouseLock = true;
+                    filmKnoppen.scroll(-scrollSize);
+                    this.scrollLock -= scrollSize / knoppenFilms.size();
+                }
+            } else if (k.isMuisOverKnop() && app.mousePressed && !mouseLock && k.getKnopNummer() == 1 && scrollLock < scrollMax) {
+                for (Knop filmKnoppen : knoppenFilms) {
+                    this.mouseLock = true;
+                    filmKnoppen.scroll(scrollSize);
+                    this.scrollLock += scrollSize / knoppenFilms.size();
+                }
+            }
+        }
     }
 
     // De onderstaande methodes tekenen de knoppen waarmee de gebruiker interactie heeft.
     public void tekenDrukKnopKaartje() {
         if (tekenDrukKnopKaartje) {
             kaartjeKnop.tekenKnop();
+        }
+    }
+
+    public void tekenScrollKnoppenFilms() {
+        for (Knop k : scrollKnoppenFilms) {
+            k.tekenKnop();
         }
     }
 
@@ -229,10 +274,13 @@ public class KaartjesAutomaat {
         Knop k = terugKnop;
         if (app.mousePressed && k.isMuisOverKnop() && !mouseLock && !printKaartje) {
             annuleerBetaling();
+            resetScrollLock();
             tekenDrukKnopKaartje = false;
             isFilmGekozen = false;
         } else if (app.mousePressed && k.isMuisOverKnop() && !mouseLock && printKaartje) {
             resetInworpEnWisselGeld();
+            resetFilmKnoppenPositie();
+            resetScrollLock();
             tekenDrukKnopKaartje = false;
             isFilmGekozen = false;
             printKaartje = false;
@@ -255,6 +303,18 @@ public class KaartjesAutomaat {
                 isFilmGekozen = true;
             }
         }
+    }
+
+    public void resetFilmKnoppenPositie() {
+        int i = 0;
+        for (Knop k : knoppenFilms) {
+            k.setY(10 + (i * 120));
+            i++;
+        }
+    }
+
+    public void resetScrollLock() {
+        this.scrollLock = 0;
     }
 
     public void setMouseLock(boolean mouseLock) {
@@ -315,3 +375,4 @@ public class KaartjesAutomaat {
         return dagtotaal;
     }
 
+}
