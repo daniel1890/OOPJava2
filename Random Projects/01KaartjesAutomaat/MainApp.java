@@ -17,6 +17,8 @@ public class MainApp extends PApplet {
         k.voegFilmsToe("Parasite", 10.00);
         k.voegFilmsToe("Forest Gump", 15.00);
         k.voegFilmsToe("Avengers", 50.00);
+        k.voegFilmsToe("2001", 5.00);
+        k.voegFilmsToe("Green Mile", 20.00);
         k.initialiseerAlleKnoppen();
     }
 
