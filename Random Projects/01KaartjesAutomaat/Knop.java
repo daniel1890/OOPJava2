@@ -26,7 +26,7 @@ public class Knop {
         app.rect(this.x, this.y, this.breedte, this.hoogte);
         app.textSize(tekstGrootte);
         app.textAlign(app.CENTER);
-        app.fill(255, 0, 0);
+        app.fill(0);
         app.text(tekst, this.x + (this.breedte / 2), this.y + (this.hoogte / 2) + (this.hoogte / 10));
     }
 
@@ -37,6 +37,14 @@ public class Knop {
         }
 
         return false;
+    }
+
+    public void scroll(float getal) {
+        this.y += -getal;
+    }
+
+    public void setY(float y) {
+        this.y = y;
     }
 
     public float getX() {
