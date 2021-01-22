@@ -1,0 +1,1 @@
+Klein programma om overerfing mee te oefenen. De superklasse is de klasse Vorm, deze wordt verdeelt in 2 subklasses genaamd: "Rechthoek" en "Cirkel". Beide klasses erven de functionaliteit van de superklasse over alleen declareren ze hun eigen x en y coördinaten waardoor ze wel juist getekent worden.
