@@ -1,5 +1,6 @@
 import java.util.Random;
 
+
 public class RandomStudentenGenerator {
 	private Student[] studentenLijst;
 

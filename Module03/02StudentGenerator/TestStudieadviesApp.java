@@ -1,4 +1,5 @@
 
+/*
 public class TestStudieadviesApp {
 	public static void main(String[] args) {
 		RandomStudentenGenerator rsg = new RandomStudentenGenerator();
@@ -9,4 +10,4 @@ public class TestStudieadviesApp {
 			System.out.println("------------------");
 		}
 	}
-}
+}*/
